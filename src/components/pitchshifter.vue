@@ -33,20 +33,20 @@ import { Jungle } from './jungle'
               shifter.off(); // remove any current listeners
             }
             audioCtx.decodeAudioData(audioData, (audioBuffer) => {
-              let source = audioCtx.createBufferSource();
-              source.buffer = audioBuffer;
-              source.playbackRate.value = 2;
-              source.connect(audioCtx.destination);
-              source.loop = true;
-              source.start(0);
+              // let source = audioCtx.createBufferSource();
+              // source.buffer = audioBuffer;
+              // source.playbackRate.value = 2;
+              // source.connect(audioCtx.destination);
+              // source.loop = true;
+              // source.start(0);
               
-              // shifter = new PitchShifter(audioCtx, audioBuffer, 1024);
-              // shifter.on('play', (detail) => {
-              //   console.log(detail);
-              // });
-              // shifter.tempo = 1;
-              // shifter.pitch = 1;
-              // shifter.pitchSemitones = value.value
+              shifter = new PitchShifter(audioCtx, audioBuffer, 1024);
+              shifter.on('play', (detail) => {
+                console.log(detail);
+              });
+              shifter.tempo = 1;
+              shifter.pitch = 1;
+              shifter.pitchSemitones = value.value
               
             });
 

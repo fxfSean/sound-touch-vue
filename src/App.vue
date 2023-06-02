@@ -1,9 +1,12 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import pitchshifter from './components/pitchshifter.vue'
+import Soundmaker from './components/soundmaker.vue';
+
 </script>
 
 <template>
-  <HelloWorld msg="Vite + Vue" />
+  <!-- <pitchshifter msg="Vite + Vue" /> -->
+  <Soundmaker/>
 </template>
 
 <style scoped>
