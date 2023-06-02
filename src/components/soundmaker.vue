@@ -10,7 +10,7 @@ import { ref } from "vue";
     
 
     const oscillator = () => {
-      // create web audio api context
+      // create web audio api audioContext
       var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
       // create Oscillator node
@@ -22,25 +22,31 @@ import { ref } from "vue";
       oscillator.start();
     }
 
-    const gain = () => {
-      var oscillator = audioContext.createOscillator();
-      oscillator.frequency.setValueAtTime(150, audioContext.currentTime); // value in hertz
+    const kick = (time) => {
+      console.log('fxf', typeof time == 'object');
+      var osc = audioContext.createOscillator();
+      osc.frequency.setValueAtTime(150, audioContext.currentTime); // value in hertz
 
-
+      if (typeof time == 'object') {
+        time = audioContext.currentTime
+      }
       var gain = audioContext.createGain();
 
-      oscillator.connect(gain);
+      osc.connect(gain);
       gain.connect(audioContext.destination);
 
-      var now = audioContext.currentTime;
+      osc.frequency.setValueAtTime(150, time);
+      gain.gain.setValueAtTime(1, time);
 
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-      oscillator.start(now);
-      oscillator.stop(now + 0.5);
+      osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+      osc.start(time);
+
+      osc.stop(time + 0.5);
     }
 
-    const snare = () => {
+    const snare = (time) => {
       let noise = audioContext.createBufferSource();
       noise.buffer = noiseBuffer();
       var noiseFilter = audioContext.createBiquadFilter();
@@ -58,8 +64,9 @@ import { ref } from "vue";
       let oscEnvelope = audioContext.createGain();
       osc.connect(oscEnvelope);
       oscEnvelope.connect(audioContext.destination);
-
-      let time = audioContext.currentTime
+      if (typeof time == 'object') {
+        time = audioContext.currentTime
+      }
       noiseEnvelope.gain.setValueAtTime(1, time);
       noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
       noise.start(time)
@@ -73,6 +80,42 @@ import { ref } from "vue";
       noise.stop(time + 0.2);
 
     }
+
+
+    var sampleLoader = function(url) {
+      var request = new XMLHttpRequest();
+      request.open("GET", url, true);
+      request.responseType = "arraybuffer";
+
+      request.onload = function() {
+        audioContext.decodeAudioData(request.response, function(buffer) {
+          window.buffer = buffer;
+        });
+      };
+
+      request.send();
+    };
+    sampleLoader('src/assets/hihat.wav');
+
+    const hihat = (time) =>{
+      if (typeof time == 'object') {
+        time = audioContext.currentTime
+      }
+      let source = audioContext.createBufferSource();
+      source.buffer = window.buffer;
+      source.connect(audioContext.destination);
+      source.start(time);
+    }
+
+    const compose = () => {
+      Tone.Transport.bpm.value = 120;
+
+      Tone.Transport.setInterval(function(time){ kick(time) }, "4n");
+      Tone.Transport.setInterval(function(time){ snare(time) }, "2n");
+      Tone.Transport.setInterval(function(time){ hihat(time) }, "8t");
+      Tone.Transport.start();
+    }
+
     function noiseBuffer () {
       var bufferSize = audioContext.sampleRate;
       var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
@@ -112,9 +155,11 @@ import { ref } from "vue";
 
     return {
       oscillator,
-      gain,
+      kick,
       snare,
       whiteNoise,
+      hihat,
+      compose,
     }
     }
   }
@@ -126,8 +171,13 @@ import { ref } from "vue";
   <div class="container">
     <button @click="whiteNoise">白噪声</button>
     <button @click="oscillator">震荡器</button>
-    <button @click="gain">增益</button>
+    <button @click="kick">底鼓</button>
     <button @click="snare">军鼓</button>
+    <button @click="hihat">镲</button>
+    <button @click="compose">组合</button>
+
+
+
   </div>
 </template>
 
